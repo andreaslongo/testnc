@@ -1,0 +1,13 @@
+[package]
+name = "testnc"
+version = "0.1.0"
+authors = ["Andreas Longo"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/andreaslongo/testnc"
+edition = "2021"
+
+[dependencies]
+anstream = "0.3.2"
+anyhow = "1.0.72"
+clap = { version = "4.3.19", features = ["derive"] }
+owo-colors = "3.5.0"

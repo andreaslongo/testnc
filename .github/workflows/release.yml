@@ -1,0 +1,48 @@
+name: "Release"
+
+# Only run when a new tag is pushed
+on:
+  push:
+    branches:
+      - '!*'
+    tags:
+      - '*'
+
+jobs:
+  build-linux:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo build --release
+      - run: tar -czvf testnc-linux.tar.gz --directory target/release testnc
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifact-linux
+          path: testnc-linux.tar.gz
+
+  build-windows:
+    runs-on: "windows-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo build --release
+      - run: Compress-Archive -Path target/release/testnc.exe -Destination testnc-windows.zip
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifact-windows
+          path: testnc-windows.zip
+
+  release:
+    needs: ["build-linux", "build-windows"]
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact-linux
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact-windows
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+              testnc-linux.tar.gz
+              testnc-windows.zip
