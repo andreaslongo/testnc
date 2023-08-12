@@ -1,5 +1,7 @@
+use std::error::Error;
 use std::net::TcpStream;
 use std::net::ToSocketAddrs;
+use std::process;
 use std::time::Duration;
 
 use anstream::println;
@@ -41,9 +43,16 @@ enum Protocol {
     Smb,
 }
 
-fn main() -> Result<()> {
+fn main() {
     let args = Args::parse();
-    let host = args.host;
+
+    if let Err(e) = run(args) {
+        println!("Application error: {e}");
+        process::exit(1);
+    }
+}
+
+fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let timeout_in_seconds = Duration::new(args.timeout.into(), 0);
     let port: u16 = match args.protocol {
         Some(Protocol::Dns) => 53,
@@ -54,11 +63,11 @@ fn main() -> Result<()> {
         None => args.port.unwrap_or(443),
     };
 
-    let connection = format!("{host}:{port}");
+    let connection = format!("{}:{port}", args.host);
 
     let addrs = connection
         .to_socket_addrs()
-        .with_context(|| host.to_string())?;
+        .with_context(|| args.host.to_string())?;
 
     for addr in addrs {
         match TcpStream::connect_timeout(&addr, timeout_in_seconds) {
