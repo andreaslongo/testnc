@@ -46,31 +46,51 @@ enum Protocol {
 fn main() {
     let args = Args::parse();
 
-    if let Err(e) = run(args) {
+    let config = Config::build(&args).unwrap_or_else(|e| {
+        println!("Configuration error: {e}");
+        process::exit(1);
+    });
+
+    if let Err(e) = run(config) {
         println!("Application error: {e}");
         process::exit(1);
     }
 }
 
-fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let timeout_in_seconds = Duration::new(args.timeout.into(), 0);
-    let port: u16 = match args.protocol {
-        Some(Protocol::Dns) => 53,
-        Some(Protocol::Http) => 80,
-        Some(Protocol::Https) => 443,
-        Some(Protocol::Mssql) => 1433,
-        Some(Protocol::Smb) => 445,
-        None => args.port.unwrap_or(443),
-    };
+struct Config {
+    host: String,
+    port: u16,
+    timeout_in_seconds: Duration,
+}
 
-    let connection = format!("{}:{port}", args.host);
+impl Config {
+    fn build(args: &Args) -> Result<Config, &'static str> {
+        let host = args.host.clone();
+        let port: u16 = match args.protocol {
+            Some(Protocol::Dns) => 53,
+            Some(Protocol::Http) => 80,
+            Some(Protocol::Https) => 443,
+            Some(Protocol::Mssql) => 1433,
+            Some(Protocol::Smb) => 445,
+            None => args.port.unwrap_or(443),
+        };
+        let timeout_in_seconds = Duration::new(args.timeout.into(), 0);
+        Ok(Config {
+            host,
+            port,
+            timeout_in_seconds,
+        })
+    }
+}
 
-    let addrs = connection
-        .to_socket_addrs()
-        .with_context(|| args.host.to_string())?;
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let connection = format!("{}:{}", config.host, config.port);
+
+    let addrs = connection.to_socket_addrs()
+        .with_context(|| config.host.to_string())?;
 
     for addr in addrs {
-        match TcpStream::connect_timeout(&addr, timeout_in_seconds) {
+        match TcpStream::connect_timeout(&addr, config.timeout_in_seconds) {
             Ok(stream) => {
                 let local = stream.local_addr().with_context(|| addr)?.ip();
                 let msg = format!("OK :: {local} :: {connection} :: {addr}");
