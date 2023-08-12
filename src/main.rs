@@ -5,8 +5,6 @@ use std::process;
 use std::time::Duration;
 
 use anstream::println;
-use anyhow::Context;
-use anyhow::Result;
 use clap::Parser;
 use clap::ValueEnum;
 use owo_colors::OwoColorize as _;
@@ -86,13 +84,12 @@ impl Config {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let connection = format!("{}:{}", config.host, config.port);
 
-    let addrs = connection.to_socket_addrs()
-        .with_context(|| config.host.to_string())?;
+    let addrs = connection.to_socket_addrs()?;
 
     for addr in addrs {
         match TcpStream::connect_timeout(&addr, config.timeout_in_seconds) {
             Ok(stream) => {
-                let local = stream.local_addr().with_context(|| addr)?.ip();
+                let local = stream.local_addr()?.ip();
                 let msg = format!("OK :: {local} :: {connection} :: {addr}");
                 println!("{}", msg.green())
             }
