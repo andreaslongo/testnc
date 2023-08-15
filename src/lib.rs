@@ -1,85 +1,72 @@
 use std::error::Error;
+use std::fs;
 use std::net::TcpStream;
 use std::net::ToSocketAddrs;
+use std::path::PathBuf;
 use std::time::Duration;
 
 use anstream::println;
-use clap::Parser;
-use clap::ValueEnum;
 use owo_colors::OwoColorize as _;
 
-/// A simple program to test TCP network connectivity
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(
-    help_template = "{about-section}\n{usage-heading} {usage}\n\n{all-args}\n\nWritten by {author}\nhttps://github.com/andreaslongo/testnc"
-)]
 pub struct Args {
-    /// DNS name or IP address
-    host: String,
-
-    /// TCP port number
-    #[arg(value_parser = clap::value_parser!(u16).range(1..))]
-    port: Option<u16>,
-
-    /// Protocol
-    #[arg(short, long, conflicts_with("port"))]
-    protocol: Option<Protocol>,
-
-    /// Timeout limit in seconds for each connection
-    #[arg(short, long, default_value_t = 1)]
-    timeout: u16,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Protocol {
-    Dns,
-    Http,
-    Https,
-    Mssql,
-    Smb,
+    pub connections: Vec<String>,
+    pub timeout: u64,
+    pub file_path: Option<PathBuf>,
 }
 
 pub struct Config {
-    host: String,
-    port: u16,
-    timeout_in_seconds: Duration,
+    connections: Vec<String>,
+    timeout: u64,
 }
 
 impl Config {
-    pub fn build(args: &Args) -> Result<Config, &'static str> {
-        let host = args.host.clone();
-        let port: u16 = match args.protocol {
-            Some(Protocol::Dns) => 53,
-            Some(Protocol::Http) => 80,
-            Some(Protocol::Https) => 443,
-            Some(Protocol::Mssql) => 1433,
-            Some(Protocol::Smb) => 445,
-            None => args.port.unwrap_or(443),
-        };
-        let timeout_in_seconds = Duration::new(args.timeout.into(), 0);
+    pub fn build(args: Args) -> Result<Config, Box<dyn Error>> {
+        // Collect connections from cli args
+        let mut connections = args.connections;
+
+        // Extend with connections from file
+        if let Some(file_path) = args.file_path {
+            let contents = fs::read_to_string(file_path)?;
+            connections.extend(
+                contents
+                    .lines()
+                    .filter(|line| !line.is_empty() || !line.starts_with('#'))
+                    .map(|line| line.to_string()),
+            );
+        }
+
         Ok(Config {
-            host,
-            port,
-            timeout_in_seconds,
+            connections,
+            timeout: args.timeout,
         })
     }
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let connection = format!("{}:{}", config.host, config.port);
+    for connection in config.connections {
+        test_connection(connection, config.timeout)?;
+    }
+    Ok(())
+}
 
+fn test_connection(connection: String, timeout: u64) -> Result<(), Box<dyn Error>> {
     let addrs = connection.to_socket_addrs()?;
 
     for addr in addrs {
-        match TcpStream::connect_timeout(&addr, config.timeout_in_seconds) {
+        match TcpStream::connect_timeout(&addr, Duration::from_secs(timeout)) {
             Ok(stream) => {
                 let local = stream.local_addr()?.ip();
-                let msg = format!("OK :: {local} :: {connection} :: {addr}");
+                // let msg = format!(" OK :: {local} :: {} :: {addr}", connection);
+                // I find this to be the best readable
+                let msg = format!(" OK :: {local} -> {} -> {addr}", connection);
+                // let msg = format!(" OK :: {local} >> {} >> {addr}", connection);
+                // let msg = format!("{addr} << {} << {local} :: OK", connection);
                 println!("{}", msg.green())
             }
             Err(_) => {
-                let msg = format!("BAD :: {connection} :: {addr}");
+                // let msg = format!("BAD :: {} :: {addr}", connection);
+                let msg = format!("BAD :: {} -> {addr}", connection);
+                // let msg = format!("{addr} << {} :: BAD", connection);
                 println!("{}", msg.red())
             }
         }

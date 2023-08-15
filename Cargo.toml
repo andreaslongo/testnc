@@ -8,5 +8,5 @@ edition = "2021"
 
 [dependencies]
 anstream = "0.3.2"
-clap = { version = "4.3.19", features = ["derive"] }
+clap = { version = "4.3.21", features = ["derive"] }
 owo-colors = "3.5.0"
