@@ -1,4 +1,4 @@
-= testnc: A simple program to *test* **n**etwork **c**onnectivity via TCP
+= testnc: A simple program to test network connectivity via TCP
 
 == Getting started
 
@@ -9,31 +9,48 @@
 [source, bash]
 ----
 # Linux
-al@linux ~ $ ./testnc github.com
-OK :: 10.0.1.4 :: github.com:443 :: 140.82.121.4:443
+al@linux ~ $ ./testnc github.com:443
+ OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.4:443
 
-al@linux ~ $ ./testnc github.com 8080
-BAD :: github.com:8080 :: 140.82.121.4:8080
+al@linux ~ $ ./testnc github.com:8080
+BAD :: github.com:8080 -> 140.82.121.4:8080
+----
+
+You can test multiple connections via command-line arguments or with a connections list file.
+
+[source, bash]
+----
+al@linux ~ $ ./testnc github.com:443 github.com:22
+ OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.3:443
+ OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.3:22
+
+al@linux ~ $ cat ./connections.txt
+github.com:22
+github.com:443
+github.com:8080
+
+al@linux ~ $ ./testnc --file connections.txt
+ OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.4:22
+ OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.4:443
+BAD :: github.com:8080 -> 140.82.121.4:8080
 ----
 
 [source, powershell]
 ----
 # Windows
 PS C:\Users\al> .\testnc.exe --help
+A simple program to test TCP network connectivity
 
-A simple program to test TCP connectivity
-
-Usage: testnc.exe [OPTIONS] <HOST> [PORT]
+Usage: testnc.exe [OPTIONS] [CONNECTIONS]...
 
 Arguments:
-  <HOST>  DNS name or IP address
-  [PORT]  TCP port number
+  [CONNECTIONS]...  One or more connection strings in the form 'host:port'
 
 Options:
-  -p, --protocol <PROTOCOL>  Protocol [possible values: dns, http, https, mssql, smb]
-  -t, --timeout <TIMEOUT>    Wait limit for each connection in seconds [default: 1]
-  -h, --help                 Print help
-  -V, --version              Print version
+  -t, --timeout <TIMEOUT>  Timeout for each connection in seconds [default: 1]
+  -f, --file <FILE>        File with connection strings in the form 'host:port' separated by newlines
+  -h, --help               Print help (see more with '--help')
+  -V, --version            Print version
 ----
 
 == License
