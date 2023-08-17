@@ -56,17 +56,11 @@ fn test_connection(connection: String, timeout: u64) -> Result<(), Box<dyn Error
         match TcpStream::connect_timeout(&addr, Duration::from_secs(timeout)) {
             Ok(stream) => {
                 let local = stream.local_addr()?.ip();
-                // let msg = format!(" OK :: {local} :: {} :: {addr}", connection);
-                // I find this to be the best readable
                 let msg = format!(" OK :: {local} -> {} -> {addr}", connection);
-                // let msg = format!(" OK :: {local} >> {} >> {addr}", connection);
-                // let msg = format!("{addr} << {} << {local} :: OK", connection);
                 println!("{}", msg.green())
             }
             Err(_) => {
-                // let msg = format!("BAD :: {} :: {addr}", connection);
                 let msg = format!("BAD :: {} -> {addr}", connection);
-                // let msg = format!("{addr} << {} :: BAD", connection);
                 println!("{}", msg.red())
             }
         }
