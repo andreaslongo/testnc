@@ -16,7 +16,27 @@ al@linux ~ $ ./testnc github.com:8080
 BAD :: github.com:8080 -> 140.82.121.4:8080
 ----
 
-You can test multiple connections via command-line arguments or with a connections list file.
+[source, powershell]
+----
+# Windows
+PS C:\Users\al> .\testnc.exe --help
+A simple program to test TCP network connectivity
+
+Usage: testnc.exe [OPTIONS] [CONNECTIONS]...
+
+Arguments:
+  [CONNECTIONS]...  One or more connection strings in the form 'host:port'
+
+Options:
+  -t, --timeout <TIMEOUT>  Timeout for each connection in seconds [default: 1]
+  -f, --file <FILE>        File with connection strings in the form 'host:port' separated by newlines
+  -h, --help               Print help (see more with '--help')
+  -V, --version            Print version
+----
+
+== Testing multiple connections
+
+You can use command-line arguments or a file containing a list of connections.
 
 [source, bash]
 ----
@@ -35,22 +55,29 @@ al@linux ~ $ ./testnc --file connections.txt
 BAD :: github.com:8080 -> 140.82.121.4:8080
 ----
 
-[source, powershell]
+== Testing connections on multiple hosts
+
+You can let Ansible run this programm on different hosts and collect the results.
+
+[source, yaml]
 ----
-# Windows
-PS C:\Users\al> .\testnc.exe --help
-A simple program to test TCP network connectivity
+- name: Example play
+  hosts: all
+  vars:
+    timeout: 1
+    connections:
+      - github.com:22
+      - github.com:443
+      - github.com:8080
+  tasks:
+    - name: testnc - copy, run and then remove binary
+      ansible.builtin.script: testnc --timeout {{ timeout }} {{ connections | join(" ") }}
+      changed_when: false  # this module always reports 'changed' on return code zero.
+      register: testnc_result
 
-Usage: testnc.exe [OPTIONS] [CONNECTIONS]...
-
-Arguments:
-  [CONNECTIONS]...  One or more connection strings in the form 'host:port'
-
-Options:
-  -t, --timeout <TIMEOUT>  Timeout for each connection in seconds [default: 1]
-  -f, --file <FILE>        File with connection strings in the form 'host:port' separated by newlines
-  -h, --help               Print help (see more with '--help')
-  -V, --version            Print version
+    - name: testnc - print result
+      ansible.builtin.debug:
+        var: testnc_result.stdout_lines
 ----
 
 == License
