@@ -36,7 +36,7 @@ Options:
 
 == Testing multiple connections
 
-You can use command-line arguments or a file containing a list of connections.
+To test multiple connections, use command-line arguments or a file with a list of connections as input.
 
 [source, bash]
 ----
