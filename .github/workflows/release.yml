@@ -13,27 +13,27 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
-      - run: cargo build --release
+      - run: cargo build --release --target x86_64-unknown-linux-gnu
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
-      - run: tar -czvf testnc-linux.tar.gz --directory target/release testnc
+      - run: tar -czvf testnc-x86_64-unknown-linux-gnu.tar.gz --directory target/x86_64-unknown-linux-gnu/release testnc
       - uses: actions/upload-artifact@v3
         with:
           name: artifact-linux
-          path: testnc-linux.tar.gz
+          path: testnc-x86_64-unknown-linux-gnu.tar.gz
 
   build-windows:
     runs-on: "windows-latest"
     steps:
       - uses: actions/checkout@v3
-      - run: cargo build --release
+      - run: cargo build --release --target x86_64-pc-windows-msvc
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
-      - run: Compress-Archive -Path target/release/testnc.exe -Destination testnc-windows.zip
+      - run: Compress-Archive -Path target/x86_64-pc-windows-msvc/release/testnc.exe -Destination testnc-x86_64-pc-windows-msvc.zip
       - uses: actions/upload-artifact@v3
         with:
           name: artifact-windows
-          path: testnc-windows.zip
+          path: testnc-x86_64-pc-windows-msvc.zip
 
   release:
     needs: ["build-linux", "build-windows"]
@@ -48,5 +48,5 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-              testnc-linux.tar.gz
-              testnc-windows.zip
+              testnc-x86_64-unknown-linux-gnu.tar.gz
+              testnc-x86_64-pc-windows-msvc.zip
