@@ -13,6 +13,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
+      - run: rustup target add x86_64-unknown-linux-musl
       - run: cargo build --release --target x86_64-unknown-linux-musl
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
@@ -26,6 +27,7 @@ jobs:
     runs-on: "windows-latest"
     steps:
       - uses: actions/checkout@v3
+      - run: rustup target add x86_64-pc-windows-msvc
       - run: cargo build --release --target x86_64-pc-windows-msvc
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
