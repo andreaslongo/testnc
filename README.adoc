@@ -57,7 +57,9 @@ BAD :: github.com:8080 -> 140.82.121.4:8080
 
 == Testing connections on multiple hosts
 
-You can let Ansible run this programm on different hosts and collect the results.
+You can let Ansible run this program on different hosts and collect the results.
+
+Copy the program to a location where Ansible can find it, e.g. next to a playbook.
 
 [source, yaml]
 ----
