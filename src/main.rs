@@ -45,5 +45,5 @@ pub struct Cli {
 
     /// File with connection strings in the form 'host:port' separated by newlines.
     #[arg(short, long)]
-    file: Option<PathBuf>,
+    file: Option<Vec<PathBuf>>,
 }

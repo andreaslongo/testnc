@@ -11,7 +11,7 @@ use owo_colors::OwoColorize as _;
 pub struct Args {
     pub connections: Vec<String>,
     pub timeout: u64,
-    pub file_path: Option<PathBuf>,
+    pub file_path: Option<Vec<PathBuf>>,
 }
 
 pub struct Config {
@@ -26,13 +26,15 @@ impl Config {
 
         // Extend with connections from file
         if let Some(file_path) = args.file_path {
-            let contents = fs::read_to_string(file_path)?;
-            connections.extend(
-                contents
-                    .lines()
-                    .filter(|line| !line.is_empty() || !line.starts_with('#'))
-                    .map(|line| line.to_string()),
-            );
+            for file in file_path {
+                let contents = fs::read_to_string(file)?;
+                connections.extend(
+                    contents
+                        .lines()
+                        .filter(|line| !line.is_empty() || !line.starts_with('#'))
+                        .map(|line| line.to_string()),
+                );
+            }
         }
 
         Ok(Config {

@@ -36,14 +36,19 @@ Options:
 
 == Testing multiple connections
 
-To test multiple connections, use command-line arguments or a file with a list of connections as input.
+To test multiple connections, use command-line arguments:
 
 [source, bash]
 ----
 al@linux ~ $ ./testnc github.com:443 github.com:22
  OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.3:443
  OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.3:22
+----
 
+Or use a text file with a list of connections:
+
+[source, bash]
+----
 al@linux ~ $ cat ./connections.txt
 github.com:22
 github.com:443
@@ -53,6 +58,13 @@ al@linux ~ $ ./testnc --file connections.txt
  OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.4:22
  OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.4:443
 BAD :: github.com:8080 -> 140.82.121.4:8080
+----
+
+You can also pass multiple files like this:
+
+[source, bash]
+----
+al@linux ~ $ ./testnc --file connections.txt --file more-connections.txt
 ----
 
 == Testing connections on multiple hosts
