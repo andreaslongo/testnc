@@ -60,11 +60,30 @@ al@linux ~ $ ./testnc --file connections.txt
 BAD :: github.com:8080 -> 140.82.121.4:8080
 ----
 
-You can also pass multiple files like this:
+Pass multiple files like this:
 
 [source, bash]
 ----
 al@linux ~ $ ./testnc --file connections.txt --file more-connections.txt
+----
+
+You can annotate your connection list with `#` comment lines:
+
+[source, bash]
+----
+al@linux ~ $ cat ./connections.txt
+# Github
+github.com:22
+github.com:443
+## This should fail:
+github.com:8080
+
+al@linux ~ $ ./testnc --file connections.txt
+# Github
+ OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.3:22
+ OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.3:443
+## This should fail:
+BAD :: github.com:8080 -> 140.82.121.3:8080
 ----
 
 == Testing connections on multiple hosts

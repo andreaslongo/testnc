@@ -24,16 +24,11 @@ impl Config {
         // Collect connections from cli args
         let mut connections = args.connections;
 
-        // Extend with connections from file
+        // Extend with connections from files
         if let Some(file_path) = args.file_path {
             for file in file_path {
                 let contents = fs::read_to_string(file)?;
-                connections.extend(
-                    contents
-                        .lines()
-                        .filter(|line| !line.is_empty() || !line.starts_with('#'))
-                        .map(|line| line.to_string()),
-                );
+                extend_connections_from_contents(&mut connections, contents);
             }
         }
 
@@ -44,9 +39,23 @@ impl Config {
     }
 }
 
+fn extend_connections_from_contents(connections: &mut Vec<String>, contents: String) {
+    connections.extend(
+        contents
+            .lines()
+            .filter(|line| !line.is_empty())
+            .map(|line| line.to_string()),
+    );
+}
+
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     for connection in config.connections {
-        test_connection(connection, config.timeout)?;
+        if connection.starts_with('#') {
+            let msg = connection;
+            println!("{}", msg.blue())
+        } else {
+            test_connection(connection, config.timeout)?;
+        }
     }
     Ok(())
 }
@@ -68,4 +77,57 @@ fn test_connection(connection: String, timeout: u64) -> Result<(), Box<dyn Error
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod extend_connections_from_file_contents {
+    use super::*;
+
+    #[test]
+    fn single_line() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("single");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init", "single"]);
+    }
+
+    #[test]
+    fn two_lines() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("first\nsecond");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init", "first", "second"]);
+    }
+
+    #[test]
+    fn empty_line() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init"]);
+    }
+
+    #[test]
+    fn empty_line_in_between() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("first\n\nsecond");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init", "first", "second"]);
+    }
+
+    #[test]
+    fn comment() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("# comment");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init", "# comment"]);
+    }
+
+    #[test]
+    fn comment_in_between() {
+        let mut connections = vec![String::from("init")];
+        let contents = String::from("first\n# comment\nsecond");
+        extend_connections_from_contents(&mut connections, contents);
+        assert_eq!(connections, vec!["init", "first", "# comment", "second"]);
+    }
 }
