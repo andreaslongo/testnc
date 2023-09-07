@@ -3,6 +3,8 @@
 == Getting started
 
 . Download and unpack the asset for your platform from the https://github.com/andreaslongo/testnc/releases[release page].
+** *Linux*: https://github.com/andreaslongo/testnc/releases/latest/download/testnc-x86_64-unknown-linux-musl.tar.gz[testnc-x86_64-unknown-linux-musl.tar.gz]
+** *Windows*: https://github.com/andreaslongo/testnc/releases/latest/download/testnc-x86_64-pc-windows-msvc.zip[testnc-x86_64-pc-windows-msvc.zip]
 
 . Open a terminal and run the program.
 
