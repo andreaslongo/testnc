@@ -75,14 +75,14 @@ al@linux ~ $ cat ./connections.txt
 # Github
 github.com:22
 github.com:443
-## This should fail:
+# This should fail:
 github.com:8080
 
 al@linux ~ $ ./testnc --file connections.txt
 # Github
  OK :: 10.0.1.10 -> github.com:22 -> 140.82.121.3:22
  OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.3:443
-## This should fail:
+# This should fail:
 BAD :: github.com:8080 -> 140.82.121.3:8080
 ----
 
@@ -96,18 +96,18 @@ Copy the program to a location where Ansible can find it, e.g. next to a playboo
 ----
 - name: Example play
   hosts: all
-  vars:
-    connections:
-      - github.com:22
-      - github.com:443
-      - github.com:8080
   tasks:
     - name: testnc - copy, run and then remove binary
       ansible.builtin.script: testnc {{ connections | join(" ") }}
       changed_when: false  # the script module always reports 'changed' on return code zero.
       register: testnc_result
+      vars:
+        connections:
+          - github.com:22
+          - github.com:443
+          - github.com:8080
 
-    - name: testnc - print result
+    - name: testnc - print results
       ansible.builtin.debug:
         var: testnc_result.stdout_lines
 ----
