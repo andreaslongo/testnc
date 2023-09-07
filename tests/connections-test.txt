@@ -1,0 +1,15 @@
+# This should pass:
+github.com:22
+github.com:443
+
+# This should fail because the port is closed:
+github.com:8080
+
+# This should fail because the port is missing:
+ya4cqmaqw2ah2eod4kimvpbwo.net
+
+# This should fail because the address is not resolvable:
+ya4cqmaqw2ah2eod4kimvpbwo.net:443
+
+# This should pass:
+google.com:443
