@@ -54,29 +54,38 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
             let msg = connection;
             println!("{}", msg.blue())
         } else {
-            test_connection(connection, config.timeout)?;
+            test_connection(connection, config.timeout);
         }
     }
     Ok(())
 }
 
-fn test_connection(connection: String, timeout: u64) -> Result<(), Box<dyn Error>> {
-    let addrs = connection.to_socket_addrs()?;
+fn test_connection(connection: String, timeout: u64) {
+    // Resolve network address
+    // Performs network address resolution
+    // Yields 0 or more addresses
+    let addrs = match connection.to_socket_addrs() {
+        Ok(v) => v,
+        Err(e) => {
+            let msg = format!("BAD :: {connection} -> {e}");
+            println!("{}", msg.red());
+            return;
+        }
+    };
 
     for addr in addrs {
         match TcpStream::connect_timeout(&addr, Duration::from_secs(timeout)) {
             Ok(stream) => {
-                let local = stream.local_addr()?.ip();
-                let msg = format!(" OK :: {local} -> {} -> {addr}", connection);
+                let local = stream.local_addr().unwrap().ip();
+                let msg = format!(" OK :: {local} -> {connection} -> {addr}");
                 println!("{}", msg.green())
             }
             Err(_) => {
-                let msg = format!("BAD :: {} -> {addr}", connection);
+                let msg = format!("BAD :: {connection} -> {addr}");
                 println!("{}", msg.red())
             }
         }
     }
-    Ok(())
 }
 
 #[cfg(test)]
