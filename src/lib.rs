@@ -51,8 +51,7 @@ fn extend_connections_from_contents(connections: &mut Vec<String>, contents: Str
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     for connection in config.connections {
         if connection.starts_with('#') {
-            let msg = connection;
-            println!("{}", msg.blue())
+            println!("{}", connection.blue())
         } else {
             test_connection(connection, config.timeout);
         }
