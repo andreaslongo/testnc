@@ -67,7 +67,7 @@ fn test_connection(connection: String, timeout: u64) {
     let addrs = match connection.to_socket_addrs() {
         Ok(v) => v,
         Err(e) => {
-            let msg = format!("BAD :: {connection} -> {e}");
+            let msg = format!("BAD :: (dst) {connection} == {e}");
             println!("{}", msg.red());
             return;
         }
@@ -77,11 +77,11 @@ fn test_connection(connection: String, timeout: u64) {
         match TcpStream::connect_timeout(&addr, Duration::from_secs(timeout)) {
             Ok(stream) => {
                 let local = stream.local_addr().unwrap().ip();
-                let msg = format!(" OK :: {local} -> {connection} -> {addr}");
+                let msg = format!(" OK :: (src) {local} >> (dst) {connection} == {addr}");
                 println!("{}", msg.green())
             }
             Err(_) => {
-                let msg = format!("BAD :: {connection} -> {addr}");
+                let msg = format!("BAD :: (dst) {connection} == {addr}");
                 println!("{}", msg.red())
             }
         }
