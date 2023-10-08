@@ -1,10 +1,10 @@
 [package]
 name = "testnc"
 version = "0.4.3"
+edition = "2021"
 authors = ["Andreas Longo"]
 license = "GPL-3.0-or-later"
 repository = "https://github.com/andreaslongo/testnc"
-edition = "2021"
 
 [dependencies]
 anstream = "0.3.2"
