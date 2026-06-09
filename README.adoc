@@ -8,7 +8,7 @@
 
 . Open a terminal and run the program.
 
-[source, bash]
+[,bash]
 ----
 # Linux
 al@linux ~ $ ./testnc github.com:443
@@ -18,7 +18,7 @@ al@linux ~ $ ./testnc github.com:8080
 BAD :: github.com:8080 -> 140.82.121.4:8080
 ----
 
-[source, powershell]
+[,powershell]
 ----
 # Windows
 PS C:\Users\al> .\testnc.exe --help
@@ -40,7 +40,7 @@ Options:
 
 To test multiple connections, use command-line arguments:
 
-[source, bash]
+[,bash]
 ----
 al@linux ~ $ ./testnc github.com:443 github.com:22
  OK :: 10.0.1.10 -> github.com:443 -> 140.82.121.3:443
@@ -49,7 +49,7 @@ al@linux ~ $ ./testnc github.com:443 github.com:22
 
 Or use a text file with a list of connections:
 
-[source, bash]
+[,bash]
 ----
 al@linux ~ $ cat ./connections.txt
 github.com:22
@@ -64,14 +64,14 @@ BAD :: github.com:8080 -> 140.82.121.4:8080
 
 Pass multiple files like this:
 
-[source, bash]
+[,bash]
 ----
 al@linux ~ $ ./testnc --file connections.txt --file more-connections.txt
 ----
 
 You can annotate your connection list with `#` comment lines:
 
-[source, bash]
+[,bash]
 ----
 al@linux ~ $ cat ./connections.txt
 # Github
@@ -94,7 +94,7 @@ You can let Ansible run this program on different hosts and collect the results.
 
 Copy the program to a location where Ansible can find it, e.g. next to a playbook.
 
-[source, yaml]
+[,yaml]
 ----
 - name: Example play
   hosts: all
@@ -114,8 +114,22 @@ Copy the program to a location where Ansible can find it, e.g. next to a playboo
         var: testnc_result.stdout_lines
 ----
 
+== Contributing
+
+=== Updating dependencies
+
+[,console]
+----
+$ pixi upgrade --dry-run
+$ pixi update --dry-run
+
+$ pixi run cargo install cargo-edit
+$ pixi run cargo upgrade --verbose
+$ pixi run cargo update --verbose
+----
+
 == License
 
-Copyright (C) 2023 Andreas Longo
+Copyright (C) 2026 Andreas Longo
 
 GNU General Public License v3.0 or later

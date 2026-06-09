@@ -1,12 +1,78 @@
 [package]
 name = "testnc"
-version = "0.4.3"
-edition = "2021"
+version = "0.4.4"
+edition = "2024"
 authors = ["Andreas Longo"]
 license = "GPL-3.0-or-later"
 repository = "https://github.com/andreaslongo/testnc"
 
 [dependencies]
-anstream = "0.3.2"
-clap = { version = "4.3.21", features = ["derive"] }
-owo-colors = "3.5.0"
+anstream = "1.0.0"
+anyhow = "1.0.102"
+clap = { version = "4.6.1", features = ["derive"] }
+human-panic = "2.0.8"
+owo-colors = "4.3.0"
+
+# Disable and remove debug info for dev builds (for smaller builds)
+# downside: no debugger, no backtrace
+[profile.dev]
+debug = 0
+strip = true
+
+[lints.rust]
+# Arithmetic:
+arithmetic_overflow = "deny" # Prevent operations that would cause integer overflow
+
+# Unsafe code detection:
+unnecessary_transmutes = "deny" # Prevent unsafe transmutation
+
+# Ensure each unsafe operation safety pre-conditions are clearly documented:
+unsafe_op_in_unsafe_fn = "forbid"
+
+[lints.clippy]
+# Lint groups:
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# cargo = { level = "warn", priority = -1 } # useful when publishing crates
+
+# new 2026-05-30
+panic = "warn"
+
+# Defensive programming:
+fallible_impl_from = "deny"
+fn_params_excessive_bools = "deny"
+must_use_candidate = "deny"
+unneeded_field_pattern = "deny"
+wildcard_enum_match_arm = "deny"
+
+# Arithmetic:
+arithmetic_side_effects = "deny" # Detect arithmetic operations with potential side effects
+cast_possible_truncation = "deny" # Detect when casting might truncate a value
+cast_possible_wrap = "deny" # Detect when casting might cause value to wrap around
+cast_precision_loss = "deny" # Detect when casting might lose precision
+cast_sign_loss = "deny" # Detect when casting might lose sign information
+checked_conversions = "deny" # Suggest using checked conversions between numeric types
+integer_division = "deny" # Highlight potential bugs from integer division truncation
+unchecked_time_subtraction = "deny" # Ensure duration subtraction won't cause underflow
+
+# Unwraps:
+expect_used = "deny" # Discourage using .expect() which can cause panics
+option_env_unwrap = "deny" # Prevent unwrapping environment variables which might be absent
+panicking_unwrap = "deny" # Prevent unwrap on values known to cause panics
+unwrap_used = "deny" # Discourage using .unwrap() which can cause panics
+
+# Array indexing:
+indexing_slicing = "deny" # Avoid direct array indexing and use safer methods like .get()
+
+# Path handling:
+join_absolute_paths = "deny" # Prevent issues when joining paths with absolute paths
+
+# Serialization issues:
+serde_api_misuse = "deny" # Prevent incorrect usage of Serde's serialization/deserialization API
+
+# Unbounded input:
+uninit_vec = "deny" # Prevent creating uninitialized vectors which is unsafe
+
+# Unsafe code detection:
+transmute_ptr_to_ref = "deny" # Prevent unsafe transmutation from pointers to references
+transmute_undefined_repr = "deny" # Detect transmutes with potentially undefined representations

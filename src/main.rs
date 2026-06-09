@@ -1,12 +1,10 @@
-use std::path::PathBuf;
-use std::process;
-
+use anyhow::{Context, Result};
 use clap::Parser;
+use std::{path::PathBuf, process};
+use testnc::{Args, Config};
 
-use testnc::Args;
-use testnc::Config;
-
-fn main() {
+fn main() -> Result<()> {
+    human_panic::setup_panic!();
     let cli = Cli::parse();
 
     let args = Args {
@@ -15,15 +13,14 @@ fn main() {
         file_path: cli.file,
     };
 
-    let config = Config::build(args).unwrap_or_else(|e| {
-        eprintln!("Configuration error: {e}\nTry 'testnc --help' for more information.");
-        process::exit(1);
-    });
+    let config = Config::build(args)
+        .context("Configuration error:\nTry 'testnc --help' for more information.")?;
 
     if let Err(e) = testnc::run(config) {
         eprintln!("Application error: {e}\nTry 'testnc --help' for more information.");
         process::exit(1);
     }
+    Ok(())
 }
 
 /// A simple program to test TCP network connectivity

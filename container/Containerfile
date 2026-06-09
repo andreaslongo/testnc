@@ -1,7 +1,163 @@
-# https://github.com/rust-lang/docker-rust
-FROM docker.io/library/rust:slim-bookworm
+# Development and build container image
+#
+# * For DEV to have a layer of isolation from the host system. This is a good
+#   idea when running unknown code e.g. from third party libraries. The container
+#   only has limited access to the host, e.g. it cannot access /home and others.
+# * For PROD as a base image for building/compiling the project.
+#
+# Efforts for contributions to the project should be as low as possible:
+#
+# * The DEV image is based on Debian slim and only has a tool for package
+#   management installed. That tool should be the only requirement for working
+#   with the project.
+# * All dependencies for the project should be installed via the package management
+#   tool if possible. This enables working with the project also without a
+#   container.
+
+ARG BASE_IMAGE
+
+
+###############################################################################
+# Dev container image
+###############################################################################
+
+FROM $BASE_IMAGE as tools
 
 # Update OS packages and install OS level dependencies if required
+# curl, ca-certificates: for installing the package management tool
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get upgrade --assume-yes --no-install-recommends \
+    && apt-get install --assume-yes --no-install-recommends \
+        ca-certificates \
+        curl \
+        xz-utils \
+    && apt-get clean \
+    && apt-get purge --assume-yes --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && apt-get check \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch to non-root user
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && useradd --create-home --no-log-init appuser
+USER appuser
+WORKDIR /home/appuser
+
+# Install package management tool
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && curl --proto '=https' --tlsv1.2 -LsSf https://pixi.sh/install.sh | bash
+
+# TODO: Try wild when I know how to run it with pixi
+# # Install fast linker for dev builds
+# RUN set -o errexit \
+#     set -o nounset \
+#     set -o pipefail \
+#     set -o xtrace \
+#     && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/davidlattimore/wild/releases/download/0.5.0/wild-linker-installer.sh | bash
+
+
+
+FROM $BASE_IMAGE AS dev
+
+# Update OS packages and install OS level dependencies if required.
+# NOTE: Additional dependencies should be installed via the package management
+# tool if possible.
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get upgrade --assume-yes --no-install-recommends \
+    && apt-get install --assume-yes --no-install-recommends \
+        ca-certificates \
+    && apt-get clean \
+    && apt-get purge --assume-yes --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && apt-get check \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch to non-root user
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && useradd --create-home --no-log-init appuser
+USER appuser
+WORKDIR /home/appuser
+
+# Install package management tool
+COPY \
+    --from=tools \
+    --chown=root:root \
+    --chmod=0755 \
+        /home/appuser/.pixi/bin/pixi \
+        /usr/local/bin/pixi
+
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && echo 'eval "$(pixi completion --shell bash)"' >> .bashrc \
+    && pixi info
+
+# TODO: Try wild when I know how to run it with pixi
+# # Install linker
+# COPY \
+#     --from=tools \
+#     --chown=root:root \
+#     --chmod=0755 \
+#         /home/appuser/.cargo/bin/wild \
+#         /usr/local/bin/wild
+#
+# RUN set -o errexit \
+#     set -o nounset \
+#     set -o pipefail \
+#     set -o xtrace \
+#     && echo 'eval "$(pixi completion --shell bash)"' >> .bashrc \
+#     && wild --version
+
+
+###############################################################################
+# Prod container image
+###############################################################################
+
+FROM dev AS build
+
+# Copy the source code, pixi.toml, pyproject.toml, Cargo.toml, Cargo.lock and pixi.lock to the container.
+# Controlled by Containerignore file.
+WORKDIR /home/appuser/app
+COPY --chown=appuser:appuser . .
+
+# TODO: How to access bind mounts as non-root user during build? We use this to
+# cache dependency downloads.
+# Workaround: Run as root.
+USER root
+
+# TODO: Use pixi run --frozen or --locked.
+RUN set -o errexit \
+    set -o nounset \
+    set -o pipefail \
+    set -o xtrace \
+    && pixi info \
+    && pixi -vvv --no-progress run build
+
+
+
+FROM $BASE_IMAGE AS prod
+
+# Update OS packages and install OS level dependencies if required.
+# NOTE: Additional dependencies should be installed via the package management
+# tool if possible.
 RUN set -o errexit \
     set -o nounset \
     set -o pipefail \
@@ -19,15 +175,16 @@ RUN set -o errexit \
     set -o nounset \
     set -o pipefail \
     set -o xtrace \
-    && useradd --create-home appuser
+    && useradd --create-home --no-log-init appuser
 USER appuser
-WORKDIR /home/appuser
+WORKDIR /home/appuser/app
 
-# Install Rust tools
-RUN set -o errexit \
-    set -o nounset \
-    set -o pipefail \
-    set -o xtrace \
-    && rustup component add \
-        clippy \
-        rustfmt
+COPY \
+    --from=build \
+    --chown=appuser:appuser \
+    --chmod=0755 \
+        /home/appuser/app/target/release/template-rust \
+        /home/appuser/app/bin/template-rust
+
+# Default command to run. Can be changed during container startup.
+CMD ["./bin/template-rust"]

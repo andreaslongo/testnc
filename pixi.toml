@@ -1,0 +1,24 @@
+[workspace]
+channels = ["conda-forge"]
+name = "testnc"
+platforms = ["linux-64", "win-64"]
+version = "0.4.4"
+
+
+[tasks]
+build = "cargo build --release"
+clean = "cargo clean"
+dev = { cmd = "bacon --config-toml '[jobs.fmt]\ncommand = [\"cargo\", \"fmt\"]\n[keybindings]\nf = \"job:fmt\"'" }
+doc = "cargo doc --no-deps"
+fix = "cargo clippy --all-targets --fix"
+test-examples = "cargo test --examples"
+cov = "cargo llvm-cov --html"
+install-cov = "cargo install cargo-llvm-cov --locked"
+
+# apps
+app = "cargo run --bin testnc --"
+
+[dependencies]
+bacon = ">=3.23.0,<4"
+rust = ">=1.96.0,<1.97"
+c-compiler = ">=1.11.0,<2"  # for cargo-edit
